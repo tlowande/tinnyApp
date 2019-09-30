@@ -14,22 +14,28 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
+// app.get("/", (req, res) => {
+//   res.send("Hello!");
+// });
 
 app.get("/urls", (req, res) => {
   let templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
+app.get("/urls/:shortURL", (req, res) => {
+  console.log(req.params);
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
+  res.render("urls_show", templateVars);
+});
+
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
+// app.get("/hello", (req, res) => {
+//   res.send("<html><body>Hello <b>World</b></body></html>\n");
+// });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
