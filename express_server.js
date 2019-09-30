@@ -19,7 +19,7 @@ let generateRandomStrings = function(){
   var result = '';
   var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   var charactersLength = characters.length;
-  for ( var i = 0; i < 7; i++ ) {
+  for ( var i = 0; i < 6; i++ ) {
      result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
   return result;
@@ -39,17 +39,26 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 app.get("/urls/:shortURL", (req, res) => {
-  console.log(req.params);
+  console.log(req.params.shortURL);
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
   res.render("urls_show", templateVars);
 });
 
 //ROUTE THAT POSTS THE FORM BODY AND RETURNS SOMETHING
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  res.send();
-});
+  const key = generateRandomStrings()
+  urlDatabase[key] = 'http://' + req.body.longURL; 
+// Log the POST request body and its random key to the urlDataBase locally here for this example ☝️ ❌❌❌using http:// here depends on the get below
 
+  res.redirect("/urls/" + key);
+});
+// Calls the app.get("/urls/:shortURL"... ☝️
+
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL]
+  res.redirect(longURL);
+});
+//❌❌❌ doesn't work if http:// isn't provided in advance on the longURL
 
 // app.get("/urls.json", (req, res) => {
 //   res.json(urlDatabase);
