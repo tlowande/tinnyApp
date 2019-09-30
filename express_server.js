@@ -1,6 +1,13 @@
+
+//SET UP 👇
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
+
+// This tells the Express app to use EJS as its templating engine 👇
+app.set("view engine", "ejs") 
+
+//____________________________
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
