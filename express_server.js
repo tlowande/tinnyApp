@@ -1,7 +1,7 @@
 
 //SET UP 👇
 const express = require("express");
-var cookieParser = require('cookie-parser')
+let cookieParser = require('cookie-parser');
 const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
@@ -10,7 +10,7 @@ app.set("view engine", "ejs");
 // This converts the info that is being submitted by the form into human readable strings 👇
 app.use(bodyParser.urlencoded({extended: true}));
 //This parse Cookie header and populate req.cookies with an object keyed by the cookie names.👇
-app.use(cookieParser())
+app.use(cookieParser());
 //____________________________
 
 const urlDatabase = {
@@ -30,33 +30,35 @@ let generateRandomStrings = () => {
 
 //________________________
 //ROUTE REQUESTS:
-// app.get("/", (req, res) => {
-//   res.send("Hello!");
-// });
+
 app.get("/urls", (req, res) => {
-  let templateVars = { 
-    urls: urlDatabase, 
+  let templateVars = {
+    urls: urlDatabase,
     username: req.cookies.username
   };
   res.render("urls_index", templateVars);
 });
-// this route should redirect user to the form and needs to come before the next get > always more specific to more general
+
+// this route should redirect user to the form and needs to come before the next get => always more specific to more general👇
 app.get("/urls/new", (req, res) => {
   let templateVars = {
     username: req.cookies.username
-  }
+  };
   res.render("urls_new", templateVars);
 });
+
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { 
-    shortURL: req.params.shortURL, 
+  let templateVars = {
+    shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
     username: req.cookies.username
   };
   res.render("urls_show", templateVars);
 });
 
-//ROUTE THAT POSTS(sends) THE FORM BODY AND RETURNS SOMETHING
+
+// POST ROUTES
+//route that posts(sends) the form body, log the body and its random key to the urlDataBase (locally here for this example) and redirect the page by calling the app.get("/urls/:shortURL"...👇
 app.post("/urls", (req, res) => {
   const key = generateRandomStrings();
   if (req.body.longURL.includes('http://')) {
@@ -64,12 +66,10 @@ app.post("/urls", (req, res) => {
   } else {
     urlDatabase[key] = 'http://' + req.body.longURL;
   }
-  // Log the body and its random key to the urlDataBase (locally here for this example) ☝️
   res.redirect("/urls/" + key);
 });
-// Redirect the page by calling the app.get("/urls/:shortURL"... ☝️
 
-//ROUTE THAT UPDATES SHORT URL using FORM AND RETURNS to show page
+//route that updates short url using form and redirects to show page
 app.post("/urls/:id", (req, res) => {
   const key = req.params.id;
   if (req.body.longURL.includes('http://')) {
@@ -77,21 +77,28 @@ app.post("/urls/:id", (req, res) => {
   } else {
     urlDatabase[key] = 'http://' + req.body.longURL;
   }
-  // Log the body and its random key to the urlDataBase (locally here for this example) ☝️
   res.redirect("/urls/" + key);
 });
 
+//add cookies and redirect login to main page
 app.post('/login', (req, res) => {
   res
     .cookie('username', req.body['username'])
-    .redirect("urls")
-})
+    .redirect("urls");
+});
 
+//removes cookies by logout and redirect to main page
 app.post('/logout', (req, res) => {
   res
     .clearCookie('username')
-    .redirect("urls")
-})
+    .redirect("urls");
+});
+
+// removes info from DB for the DELETE button and redirects to the main page
+app.post("/urls/:shortURL/delete", (req, res) => {
+  delete urlDatabase[req.params.shortURL];
+  res.redirect("/urls");
+});
 
 //👇THIS REDIRECTS THE USER TO THE WEBSITE REQUESTED BY CLICKING ON THE SHORT LINK
 app.get("/u/:shortURL", (req, res) => {
@@ -99,20 +106,6 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
-
-//ROUTE THAT DELETES URL using FORM AND RETURNS to main page
-app.post("/urls/:shortURL/delete", (req, res) => {
-  
-  delete urlDatabase[req.params.shortURL];
-  res.redirect("/urls");
-});
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
-
-// app.get("/hello", (req, res) => {
-//   res.send("<html><body>Hello <b>World</b></body></html>\n");
-// });
 
 //THIS MAKES THE SERVER LISTEN TO THE REQUESTS THAT CMOMES FROM THE BROWSER
 app.listen(PORT, () => {
