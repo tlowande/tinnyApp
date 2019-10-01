@@ -39,7 +39,6 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 app.get("/urls/:shortURL", (req, res) => {
-  console.log(req.params.shortURL);
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
   res.render("urls_show", templateVars);
 });
@@ -56,6 +55,17 @@ app.post("/urls", (req, res) => {
   res.redirect("/urls/" + key);
 });
 // Calls the app.get("/urls/:shortURL"... ☝️
+
+app.post("/urls/:id", (req, res) => {
+  const key = req.params.id
+  if(req.body.longURL.includes('http://')){
+    urlDatabase[key] = req.body.longURL;
+  } else {
+  urlDatabase[key] = 'http://' + req.body.longURL; 
+  }
+// Log the body and its random key to the urlDataBase (locally here for this example) ☝️ 
+  res.redirect("/urls/" + key);
+});
 
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL]
