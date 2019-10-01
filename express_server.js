@@ -44,12 +44,15 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-//ROUTE THAT POSTS THE FORM BODY AND RETURNS SOMETHING
+//ROUTE THAT POSTS(sends) THE FORM BODY AND RETURNS SOMETHING
 app.post("/urls", (req, res) => {
   const key = generateRandomStrings()
+  if(req.body.longURL.includes('http://')){
+    urlDatabase[key] = req.body.longURL;
+  } else {
   urlDatabase[key] = 'http://' + req.body.longURL; 
-// Log the POST request body and its random key to the urlDataBase locally here for this example ☝️ ❌❌❌using http:// here depends on the get below
-
+  }
+// Log the body and its random key to the urlDataBase (locally here for this example) ☝️ 
   res.redirect("/urls/" + key);
 });
 // Calls the app.get("/urls/:shortURL"... ☝️
@@ -58,7 +61,6 @@ app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL]
   res.redirect(longURL);
 });
-//❌❌❌ doesn't work if http:// isn't provided in advance on the longURL
 
 // app.get("/urls.json", (req, res) => {
 //   res.json(urlDatabase);
