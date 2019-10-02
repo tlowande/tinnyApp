@@ -8,7 +8,7 @@ const bodyParser = require("body-parser");
 // This tells the Express app to use EJS as its templating engine 👇
 app.set("view engine", "ejs");
 // This converts the info that is being submitted by the form into human readable strings 👇
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 //This parse Cookie header and populate req.cookies with an object keyed by the cookie names.👇
 app.use(cookieParser());
 //____________________________
@@ -17,6 +17,9 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+const users = {};
+
 //________________________
 let generateRandomStrings = () => {
   let result = '';
@@ -27,6 +30,15 @@ let generateRandomStrings = () => {
   }
   return result;
 };
+
+let checkEmail = (email) => {
+  for (let user in users) {
+    if (users[user].email === email) {
+      return true;
+    }
+  }
+  return false;
+}
 
 //________________________
 //ROUTE REQUESTS:
@@ -56,6 +68,9 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.get('/register', (req, res) => {
+  res.render("urls_registration")
+})
 
 // POST ROUTES
 //route that posts(sends) the form body, log the body and its random key to the urlDataBase (locally here for this example) and redirect the page by calling the app.get("/urls/:shortURL"...👇
@@ -99,6 +114,28 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls");
 });
+
+//this route checks if user already exists and if it doesn't, it creates an ID and add to the DB
+app.post('/register', (req, res) => {
+  if (!req.body.email || !req.body.password) {
+    res.status(400).send("<h2>'Booo...We need an email address AND a password\n'</h2><a href='/register'> return </a>")
+  };
+  if (checkEmail(req.body.email)) {
+    res
+      .status(400)
+      .send("<h2>'Ops, you already have an account with this email, please sign in\n'</h2><a href='/register'> return </a>")
+      }
+  let id = generateRandomStrings()
+  users[id] = {
+    id: id,
+    email: req.body.email,
+    password: req.body.password
+  }
+  res
+    .cookie('user_id', id)
+    .redirect('/urls')
+})
+
 
 //👇THIS REDIRECTS THE USER TO THE WEBSITE REQUESTED BY CLICKING ON THE SHORT LINK
 app.get("/u/:shortURL", (req, res) => {
