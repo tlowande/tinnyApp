@@ -49,8 +49,6 @@ app.get("/urls", (req, res) => {
     user: users[req.cookies['user_id']]
   };
   res.render("urls_index", templateVars);
-  console.log('main page cookies now are', req.cookies['user_id']);
-  console.log('what im sending to my header is ', templateVars);
 });
 
 // this route should redirect user to the form and needs to come before the next get => always more specific to more general👇
@@ -70,6 +68,10 @@ app.get("/urls/:shortURL", (req, res) => {
   
   res.render("urls_show", templateVars);
 });
+
+app.get('/login', (req, res) => {
+  res.render("urls_signin")
+})
 
 app.get('/register', (req, res) => {
   res.render("urls_registration")
@@ -98,19 +100,37 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/urls/" + key);
 });
 
-//add cookies and redirect login to main page
-// app.post('/login', (req, res) => {
-//   res
-//     .cookie('username', req.body['username'])
-//     .redirect("urls");
-// });
+// logs in and sredirect to main page
+app.post('/login', (req, res) => {
+  if (!req.body.email || !req.body.password) {
+    res.status(400).send("<h2>'Booo...We need an email address AND a password\n'</h2><a href='/login'> return </a>");
+    return
+  };
+  if (!checkEmail(req.body.email)) {
+    res
+      .status(403)
+      .send("<h2>'Ops, you don't have an account with this email, please register\n'</h2><a href='/register'> return </a>");
+      return
+  };
+
+  // if (checkEmail(req.body.email)) {
+    for (let user in users){
+      if(users[user].email === req.body.email && users[user].password === req.body.password){
+        res
+          .cookie('user_id', user)
+          . redirect("urls");      
+      }  
+    } 
+
+  // }
+});
 
 //removes cookies by logout and redirect to main page
-// app.post('/logout', (req, res) => {
-//   res
-//     .clearCookie('username')
-//     .redirect("urls");
-// });
+app.post('/logout', (req, res) => {
+  res
+    .clearCookie('user_id')
+    .redirect("urls");
+});
 
 // removes info from DB for the DELETE button and redirects to the main page
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -130,19 +150,18 @@ app.post('/register', (req, res) => {
       .send("<h2>'Ops, you already have an account with this email, please sign in\n'</h2><a href='/register'> return </a>");
       return
       }
-  console.log('initial users are', users);
+  
   let id = generateRandomStrings()
   users[id] = {
     id: id,
     email: req.body.email,
     password: req.body.password
   };
-  console.log('first time logging cookies', req.cookies);
+  
   res
     .cookie('user_id', id)
     .redirect('/urls')
-  console.log('after first login, my DB is ',users);
-  console.log('after seting cookies, my cookies are ',req.cookies);
+  
 })
 
 //👇THIS REDIRECTS THE USER TO THE WEBSITE REQUESTED BY CLICKING ON THE SHORT LINK

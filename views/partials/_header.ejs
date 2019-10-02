@@ -9,19 +9,19 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
-      <%if (user.email){%>
+      <% if (user && user.email){%>
         <label class="navbar-brand">Logged in as <%=user.email%></label>
         <form class="form-inline" action="/logout" method="POST">
           <button type="submit" class="btn btn-light">Logout</button>
         </form>
       <%} else {%>
-      <div>
-        <form class="form-inline" action="/login" method="POST">
-          <label for="longURL" class="navbar-brand">Login</label>
-          <input class="form-control" type="text" name="username" style="width: 300px; margin: 1em">
-          <button type="submit" class="btn btn-light">Submit</button>
-        </form>
-      </div>
+          <form action="/login" method="GET">
+            <button type="submit" class="btn btn-light">Sing in</button>
+          </form>
+          <form action="/register" method="GET">
+            <button type="submit" class="btn btn-light">Register</button>
+          </form>
+        </div>
       <%}%>
     </div>
   </nav>
