@@ -14,8 +14,14 @@ app.use(cookieParser());
 //____________________________
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": { 
+    longURL: "http://www.lighthouselabs.ca",
+    userID: 'aj481w'
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: 'aj481w1'
+  }
 };
 
 const users = {};
@@ -49,12 +55,24 @@ let findUserByEmail = (email) => {
   return false
 }
 
+let urlsForUser = (id) => {
+  let urlById = {};
+  for(let url in urlDatabase){
+    if (urlDatabase[url].userID === id){
+      urlById[url] = urlDatabase[url].longURL
+    }
+  }
+  return urlById;
+}
+
+// console.log(urlsForUser ('aj481w1'));
+
 //________________________
 //ROUTE REQUESTS:
 
 app.get("/urls", (req, res) => {
   let templateVars = {
-    urls: urlDatabase,
+    urls: urlsForUser(req.cookies['user_id']),
     user: users[req.cookies['user_id']]
   };
   res.render("urls_index", templateVars);
@@ -69,13 +87,17 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = {
+  if (req.cookies['user_id']){
+    let dbPerUser = urlsForUser(req.cookies['user_id']);
+    let templateVars = {
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
+    longURL: dbPerUser[req.params.shortURL],
     user: users[req.cookies['user_id']]
     }
-  
-  res.render("urls_show", templateVars);
+    res.render("urls_show", templateVars);
+    return
+  } 
+  res.redirect("/urls");
 });
 
 app.get('/login', (req, res) => {
@@ -91,9 +113,9 @@ app.get('/register', (req, res) => {
 app.post("/urls", (req, res) => {
   const key = generateRandomStrings();
   if (req.body.longURL.includes('http://')) {
-    urlDatabase[key] = req.body.longURL;
+    urlDatabase[key] = { longURL: req.body.longURL, userID: req.cookies['user_id'] }
   } else {
-    urlDatabase[key] = 'http://' + req.body.longURL;
+    urlDatabase[key] = { longURL: 'http://' + req.body.longURL, userID: req.cookies['user_id']}
   }
   res.redirect("/urls/" + key);
 });
@@ -102,14 +124,14 @@ app.post("/urls", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   const key = req.params.id;
   if (req.body.longURL.includes('http://')) {
-    urlDatabase[key] = req.body.longURL;
+    urlDatabase[key].longURL = req.body.longURL;
   } else {
-    urlDatabase[key] = 'http://' + req.body.longURL;
+    urlDatabase[key].longURL = 'http://' + req.body.longURL;
   }
   res.redirect("/urls/" + key);
 });
 
-// logs in and sredirect to main page
+// logs in and redirects to main page
 app.post('/login', (req, res) => {
 
   let user = findUserByEmail(req.body.email);
@@ -149,7 +171,11 @@ app.post('/logout', (req, res) => {
 
 // removes info from DB for the DELETE button and redirects to the main page
 app.post("/urls/:shortURL/delete", (req, res) => {
+  if (req.cookies['user_id']){
   delete urlDatabase[req.params.shortURL];
+  res.redirect("/urls");
+  return
+  }
   res.redirect("/urls");
 });
 
@@ -181,7 +207,7 @@ app.post('/register', (req, res) => {
 
 //👇THIS REDIRECTS THE USER TO THE WEBSITE REQUESTED BY CLICKING ON THE SHORT LINK
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
