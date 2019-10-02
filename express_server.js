@@ -5,6 +5,7 @@ let cookieParser = require('cookie-parser');
 const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
+const bcrypt = require('bcrypt'); // to hash passwords
 // This tells the Express app to use EJS as its templating engine 👇
 app.set("view engine", "ejs");
 // This converts the info that is being submitted by the form into human readable strings 👇
@@ -149,7 +150,7 @@ app.post('/login', (req, res) => {
   };
 
   if (user) {
-    if(user.password !== req.body.password){
+    if(!bcrypt.compareSync(req.body.password, user.password)){
       res
       .status(403)
       .send("<h2>Wrong Password, try again!\n</h2><a href='/login'> return </a>");
@@ -196,13 +197,13 @@ app.post('/register', (req, res) => {
   users[id] = {
     id: id,
     email: req.body.email,
-    password: req.body.password
+    password: bcrypt.hashSync(req.body.password, 10)
   };
   
   res
     .cookie('user_id', id)
     .redirect('/urls')
-  
+  console.log(users)
 })
 
 //👇THIS REDIRECTS THE USER TO THE WEBSITE REQUESTED BY CLICKING ON THE SHORT LINK
