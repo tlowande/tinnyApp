@@ -31,13 +31,22 @@ let generateRandomStrings = () => {
   return result;
 };
 
-let checkEmail = (email) => {
+// let checkEmail = (email) => {
+//   for (let user in users) {
+//     if (users[user].email === email) {
+//       return true;
+//     }
+//   }
+//   return false;
+// }
+
+let findUserByEmail = (email) => {
   for (let user in users) {
     if (users[user].email === email) {
-      return true;
+      return users[user];
     }
-  }
-  return false;
+  } 
+  return false
 }
 
 //________________________
@@ -102,27 +111,33 @@ app.post("/urls/:id", (req, res) => {
 
 // logs in and sredirect to main page
 app.post('/login', (req, res) => {
+
+  let user = findUserByEmail(req.body.email);
+
   if (!req.body.email || !req.body.password) {
     res.status(400).send("<h2>'Booo...We need an email address AND a password\n'</h2><a href='/login'> return </a>");
     return
   };
-  if (!checkEmail(req.body.email)) {
+
+  if (!user) {
     res
       .status(403)
-      .send("<h2>'Ops, you don't have an account with this email, please register\n'</h2><a href='/register'> return </a>");
+      .send("<h2>'Ops, you don't have an account with this email, please register\n'</h2><a href='/register'> register </a>");
       return
   };
 
-  // if (checkEmail(req.body.email)) {
-    for (let user in users){
-      if(users[user].email === req.body.email && users[user].password === req.body.password){
-        res
-          .cookie('user_id', user)
-          . redirect("urls");      
-      }  
-    } 
+  if (user) {
+    if(user.password !== req.body.password){
+      res
+      .status(403)
+      .send("<h2>Wrong Password, try again!\n</h2><a href='/login'> return </a>");
+      return
+    }
+  } 
 
-  // }
+  res
+   . cookie('user_id', user.id)
+   . redirect("urls");      
 });
 
 //removes cookies by logout and redirect to main page
@@ -144,10 +159,10 @@ app.post('/register', (req, res) => {
     res.status(400).send("<h2>'Booo...We need an email address AND a password\n'</h2><a href='/register'> return </a>");
     return
   };
-  if (checkEmail(req.body.email)) {
+  if (findUserByEmail(req.body.email)) {
     res
       .status(400)
-      .send("<h2>'Ops, you already have an account with this email, please sign in\n'</h2><a href='/register'> return </a>");
+      .send("<h2>'Ops, you already have an account with this email, please sign in\n'</h2><a href='/login'> Sign in </a>");
       return
       }
   

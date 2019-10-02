@@ -8,21 +8,21 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-      </div>
-      <% if (user && user.email){%>
-        <label class="navbar-brand">Logged in as <%=user.email%></label>
-        <form class="form-inline" action="/logout" method="POST">
-          <button type="submit" class="btn btn-light">Logout</button>
-        </form>
-      <%} else {%>
-          <form action="/login" method="GET">
-            <button type="submit" class="btn btn-light">Sing in</button>
-          </form>
-          <form action="/register" method="GET">
-            <button type="submit" class="btn btn-light">Register</button>
-          </form>
-        </div>
-      <%}%>
     </div>
+  </div>
+  <% if (user && user.email){%>
+    <label class="navbar-brand">Logged in as <%=user.email%></label>
+    <form class="form-inline" action="/logout" method="POST">
+      <button type="submit" class="btn btn-light">Logout</button>
+    </form>
+  <%} else {%>
+      <form action="/login" method="GET">
+        <button type="submit" class="btn btn-light">Sign in</button>
+      </form>
+      <form action="/register" method="GET">
+        <button type="submit" class="btn btn-light">Register</button>
+      </form>
+    </div>
+  <%}%>
   </nav>
 </header>
