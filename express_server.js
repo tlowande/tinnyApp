@@ -46,15 +46,17 @@ let checkEmail = (email) => {
 app.get("/urls", (req, res) => {
   let templateVars = {
     urls: urlDatabase,
-    username: req.cookies.username
+    user: users[req.cookies['user_id']]
   };
   res.render("urls_index", templateVars);
+  console.log('main page cookies now are', req.cookies['user_id']);
+  console.log('what im sending to my header is ', templateVars);
 });
 
 // this route should redirect user to the form and needs to come before the next get => always more specific to more general👇
 app.get("/urls/new", (req, res) => {
   let templateVars = {
-    username: req.cookies.username
+    user: users[req.cookies['user_id']]
   };
   res.render("urls_new", templateVars);
 });
@@ -63,8 +65,9 @@ app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies.username
-  };
+    user: users[req.cookies['user_id']]
+    }
+  
   res.render("urls_show", templateVars);
 });
 
@@ -96,18 +99,18 @@ app.post("/urls/:id", (req, res) => {
 });
 
 //add cookies and redirect login to main page
-app.post('/login', (req, res) => {
-  res
-    .cookie('username', req.body['username'])
-    .redirect("urls");
-});
+// app.post('/login', (req, res) => {
+//   res
+//     .cookie('username', req.body['username'])
+//     .redirect("urls");
+// });
 
 //removes cookies by logout and redirect to main page
-app.post('/logout', (req, res) => {
-  res
-    .clearCookie('username')
-    .redirect("urls");
-});
+// app.post('/logout', (req, res) => {
+//   res
+//     .clearCookie('username')
+//     .redirect("urls");
+// });
 
 // removes info from DB for the DELETE button and redirects to the main page
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -118,24 +121,29 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 //this route checks if user already exists and if it doesn't, it creates an ID and add to the DB
 app.post('/register', (req, res) => {
   if (!req.body.email || !req.body.password) {
-    res.status(400).send("<h2>'Booo...We need an email address AND a password\n'</h2><a href='/register'> return </a>")
+    res.status(400).send("<h2>'Booo...We need an email address AND a password\n'</h2><a href='/register'> return </a>");
+    return
   };
   if (checkEmail(req.body.email)) {
     res
       .status(400)
-      .send("<h2>'Ops, you already have an account with this email, please sign in\n'</h2><a href='/register'> return </a>")
+      .send("<h2>'Ops, you already have an account with this email, please sign in\n'</h2><a href='/register'> return </a>");
+      return
       }
+  console.log('initial users are', users);
   let id = generateRandomStrings()
   users[id] = {
     id: id,
     email: req.body.email,
     password: req.body.password
-  }
+  };
+  console.log('first time logging cookies', req.cookies);
   res
     .cookie('user_id', id)
     .redirect('/urls')
+  console.log('after first login, my DB is ',users);
+  console.log('after seting cookies, my cookies are ',req.cookies);
 })
-
 
 //👇THIS REDIRECTS THE USER TO THE WEBSITE REQUESTED BY CLICKING ON THE SHORT LINK
 app.get("/u/:shortURL", (req, res) => {
