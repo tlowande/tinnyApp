@@ -35,7 +35,7 @@ let findUserByEmail = (email, database) => {
       return database[user];
     }
   }
-  return false;
+  return undefined;
 };
 
 let urlsForUser = (id) => {
