@@ -15,7 +15,7 @@ app.use(cookieSession({ signed: false }));
 //____________________________
 
 const urlDatabase = {
-  "b2xVn2": { 
+  "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
     userID: 'aj481w'
   },
@@ -52,19 +52,19 @@ let findUserByEmail = (email) => {
     if (users[user].email === email) {
       return users[user];
     }
-  } 
-  return false
-}
+  }
+  return false;
+};
 
 let urlsForUser = (id) => {
   let urlById = {};
-  for(let url in urlDatabase){
-    if (urlDatabase[url].userID === id){
-      urlById[url] = urlDatabase[url].longURL
+  for (let url in urlDatabase) {
+    if (urlDatabase[url].userID === id) {
+      urlById[url] = urlDatabase[url].longURL;
     }
   }
   return urlById;
-}
+};
 
 // console.log(urlsForUser ('aj481w1'));
 
@@ -88,26 +88,26 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  if (req.session['user_id']){
+  if (req.session['user_id']) {
     let dbPerUser = urlsForUser(req.session['user_id']);
     let templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: dbPerUser[req.params.shortURL],
-    user: users[req.session['user_id']]
-    }
+      shortURL: req.params.shortURL,
+      longURL: dbPerUser[req.params.shortURL],
+      user: users[req.session['user_id']]
+    };
     res.render("urls_show", templateVars);
-    return
-  } 
+    return;
+  }
   res.redirect("/urls");
 });
 
 app.get('/login', (req, res) => {
-  res.render("urls_signin")
-})
+  res.render("urls_signin");
+});
 
 app.get('/register', (req, res) => {
-  res.render("urls_registration")
-})
+  res.render("urls_registration");
+});
 
 //👇THIS REDIRECTS THE USER TO THE WEBSITE REQUESTED BY CLICKING ON THE SHORT LINK
 app.get("/u/:shortURL", (req, res) => {
@@ -122,23 +122,23 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/urls", (req, res) => {
   const key = generateRandomStrings();
   if (req.body.longURL.includes('http://')) {
-    urlDatabase[key] = { longURL: req.body.longURL, userID: req.session['user_id'] }
+    urlDatabase[key] = { longURL: req.body.longURL, userID: req.session['user_id'] };
   } else {
-    urlDatabase[key] = { longURL: 'http://' + req.body.longURL, userID: req.session['user_id']}
+    urlDatabase[key] = { longURL: 'http://' + req.body.longURL, userID: req.session['user_id']};
   }
   res.redirect("/urls/" + key);
 });
 
 //route that updates short url using form and redirects to show page
 app.post("/urls/:id", (req, res) => {
-  if (req.session['user_id']){
+  if (req.session['user_id']) {
     const key = req.params.id;
     if (req.body.longURL.includes('http://')) {
-       urlDatabase[key].longURL = req.body.longURL;
+      urlDatabase[key].longURL = req.body.longURL;
     } else {
       urlDatabase[key].longURL = 'http://' + req.body.longURL;
     }
-    res.redirect("/urls/" + key); 
+    res.redirect("/urls/" + key);
   }
   res.redirect("/urls");
 });
@@ -150,24 +150,24 @@ app.post('/login', (req, res) => {
 
   if (!req.body.email || !req.body.password) {
     res.status(400).send("<h2>'Booo...We need an email address AND a password\n'</h2><a href='/login'> return </a>");
-  };
+  }
 
   if (!user) {
     res
       .status(403)
       .send("<h2>'Ops, you don't have an account with this email, please register\n'</h2><a href='/register'> register </a>");
-  };
+  }
 
   if (user) {
-    if(!bcrypt.compareSync(req.body.password, user.password)){
+    if (!bcrypt.compareSync(req.body.password, user.password)) {
       res
-      .status(403)
-      .send("<h2>Wrong Password, try again!\n</h2><a href='/login'> return </a>");
+        .status(403)
+        .send("<h2>Wrong Password, try again!\n</h2><a href='/login'> return </a>");
     }
-  } 
+  }
 
   req.session['user_id'] = user.id;
-  res.redirect("urls");      
+  res.redirect("urls");
 });
 
 //removes cookies by logout and redirect to main page
@@ -179,9 +179,9 @@ app.post('/logout', (req, res) => {
 
 // removes info from DB for the DELETE button and redirects to the main page
 app.post("/urls/:shortURL/delete", (req, res) => {
-  if (req.session['user_id']){
-  delete urlDatabase[req.params.shortURL];
-  res.redirect("/urls");
+  if (req.session['user_id']) {
+    delete urlDatabase[req.params.shortURL];
+    res.redirect("/urls");
   }
   res.redirect("/urls");
 });
@@ -190,16 +190,16 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post('/register', (req, res) => {
   if (!req.body.email || !req.body.password) {
     res.status(400).send("<h2>'Booo...We need an email address AND a password\n'</h2><a href='/register'> return </a>");
-    return
-  };
+    return;
+  }
   if (findUserByEmail(req.body.email)) {
     res
       .status(400)
       .send("<h2>'Ops, you already have an account with this email, please sign in\n'</h2><a href='/login'> Sign in </a>");
-      return
-      }
+    return;
+  }
   
-  let id = generateRandomStrings()
+  let id = generateRandomStrings();
   users[id] = {
     id: id,
     email: req.body.email,
@@ -207,9 +207,9 @@ app.post('/register', (req, res) => {
   };
   
   
-  req.session['user_id'] = id
-  res.redirect('/urls')
-})
+  req.session['user_id'] = id;
+  res.redirect('/urls');
+});
 
 
 
