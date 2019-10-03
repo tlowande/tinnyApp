@@ -6,67 +6,19 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt'); // to hash passwords
+const { urlsForUser, findUserByEmail, generateRandomStrings, users, urlDatabase } = require('./helpers');
+
+//________________________________
+
+
 // This tells the Express app to use EJS as its templating engine 👇
 app.set("view engine", "ejs");
 // This converts the info that is being submitted by the form into human readable strings 👇
 app.use(bodyParser.urlencoded({ extended: true }));
 //This parse cookie header and populate req.cookie with an object keyed by the cookie names.👇
 app.use(cookieSession({ signed: false }));
-//____________________________
 
-const urlDatabase = {
-  "b2xVn2": {
-    longURL: "http://www.lighthouselabs.ca",
-    userID: 'aj481w'
-  },
-  "9sm5xK": {
-    longURL: "http://www.google.com",
-    userID: 'aj481w1'
-  }
-};
 
-const users = {};
-
-//________________________
-let generateRandomStrings = () => {
-  let result = '';
-  let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let charactersLength = characters.length;
-  for (let i = 0; i < 6; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-  return result;
-};
-
-// let checkEmail = (email) => {
-//   for (let user in users) {
-//     if (users[user].email === email) {
-//       return true;
-//     }
-//   }
-//   return false;
-// }
-
-let findUserByEmail = (email) => {
-  for (let user in users) {
-    if (users[user].email === email) {
-      return users[user];
-    }
-  }
-  return false;
-};
-
-let urlsForUser = (id) => {
-  let urlById = {};
-  for (let url in urlDatabase) {
-    if (urlDatabase[url].userID === id) {
-      urlById[url] = urlDatabase[url].longURL;
-    }
-  }
-  return urlById;
-};
-
-// console.log(urlsForUser ('aj481w1'));
 
 //________________________
 //ROUTE GET REQUESTS:
@@ -146,7 +98,7 @@ app.post("/urls/:id", (req, res) => {
 // logs in and redirects to main page
 app.post('/login', (req, res) => {
 
-  let user = findUserByEmail(req.body.email);
+  let user = findUserByEmail(req.body.email, users);
 
   if (!req.body.email || !req.body.password) {
     res.status(400).send("<h2>'Booo...We need an email address AND a password\n'</h2><a href='/login'> return </a>");
@@ -190,13 +142,11 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post('/register', (req, res) => {
   if (!req.body.email || !req.body.password) {
     res.status(400).send("<h2>'Booo...We need an email address AND a password\n'</h2><a href='/register'> return </a>");
-    return;
   }
-  if (findUserByEmail(req.body.email)) {
+  if (findUserByEmail(req.body.email, users)) {
     res
       .status(400)
       .send("<h2>'Ops, you already have an account with this email, please sign in\n'</h2><a href='/login'> Sign in </a>");
-    return;
   }
   
   let id = generateRandomStrings();
