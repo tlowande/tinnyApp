@@ -15,7 +15,7 @@ const { urlsForUser, findUserByEmail, generateRandomStrings, users, urlDatabase 
 app.set("view engine", "ejs");
 // This converts the info that is being submitted by the form into human readable strings 👇
 app.use(bodyParser.urlencoded({ extended: true }));
-//This parse cookie header and populate req.cookie with an object keyed by the cookie names.👇
+//This parses cookie header and populates req.cookie/req.session with an object keyed by the cookie names.👇
 app.use(cookieSession({ signed: false }));
 
 
@@ -23,7 +23,18 @@ app.use(cookieSession({ signed: false }));
 //________________________
 //ROUTE GET REQUESTS:
 
+//homepage
+app.get('/', (req, res) => {
+  if (req.session['user_id']) {
+    res.redirect('/urls');
+  } else {
+    res.redirect('/login');
+  }
+});
+
+//logged in homepage
 app.get("/urls", (req, res) => {
+
   let templateVars = {
     urls: urlsForUser(req.session['user_id']),
     user: users[req.session['user_id']]
@@ -31,14 +42,18 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-// this route should redirect user to the form and needs to come before the next get => always more specific to more general👇
+// redirect user to make a new shortlink and needs to come before the next get => always more specific to more general👇
 app.get("/urls/new", (req, res) => {
+  if (!req.session['user_id']) {
+    res.redirect('/login');
+  }
   let templateVars = {
     user: users[req.session['user_id']]
   };
   res.render("urls_new", templateVars);
 });
 
+//presents the shor urls and the edit option
 app.get("/urls/:shortURL", (req, res) => {
   if (req.session['user_id']) {
     let dbPerUser = urlsForUser(req.session['user_id']);
@@ -53,24 +68,40 @@ app.get("/urls/:shortURL", (req, res) => {
   res.redirect("/urls");
 });
 
+//redirects to login page
 app.get('/login', (req, res) => {
+  if (req.session['user_id']) {
+    res.redirect('/urls');
+    return;
+  }
   res.render("urls_signin");
 });
 
+//redirects to register page
 app.get('/register', (req, res) => {
+  if (req.session['user_id']) {
+    res.redirect('/urls');
+    return;
+  }
   res.render("urls_registration");
 });
 
 //👇THIS REDIRECTS THE USER TO THE WEBSITE REQUESTED BY CLICKING ON THE SHORT LINK
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL].longURL;
-  res.redirect(longURL);
+  if (!urlDatabase[req.params.shortURL]) {
+    res.send('Something is missing, please get the right url');
+    return;
+  } else {
+    const longURL = urlDatabase[req.params.shortURL].longURL;
+    res.redirect(longURL);
+  }
 });
 
 
 
 // POST ROUTES
-//route that posts(sends) the form body, log the body and its random key to the urlDataBase (locally here for this example) and redirect the page by calling the app.get("/urls/:shortURL"...👇
+
+//posts(sends) the longURL, log the body and its random key to the urlDataBase (locally here for this example) and redirect the page by calling the app.get("/urls/:shortURL"...👇
 app.post("/urls", (req, res) => {
   const key = generateRandomStrings();
   if (req.body.longURL.includes('http://')) {
@@ -79,6 +110,16 @@ app.post("/urls", (req, res) => {
     urlDatabase[key] = { longURL: 'http://' + req.body.longURL, userID: req.session['user_id']};
   }
   res.redirect("/urls/" + key);
+});
+
+// removes info from DB for the DELETE button and redirects to the main page
+app.post("/urls/:shortURL/delete", (req, res) => {
+  if (req.session['user_id']) {
+    delete urlDatabase[req.params.shortURL];
+    res.redirect("/urls");
+  } else {
+    res.redirect("/urls");
+  }
 });
 
 //route that updates short url using form and redirects to show page
@@ -90,7 +131,8 @@ app.post("/urls/:id", (req, res) => {
     } else {
       urlDatabase[key].longURL = 'http://' + req.body.longURL;
     }
-    res.redirect("/urls/" + key);
+    res.redirect("/urls");
+    return;
   }
   res.redirect("/urls");
 });
@@ -102,12 +144,14 @@ app.post('/login', (req, res) => {
 
   if (!req.body.email || !req.body.password) {
     res.status(400).send("<h2>'Booo...We need an email address AND a password\n'</h2><a href='/login'> return </a>");
+    return;
   }
 
   if (!user) {
     res
       .status(403)
       .send("<h2>'Ops, you don't have an account with this email, please register\n'</h2><a href='/register'> register </a>");
+    return;
   }
 
   if (user) {
@@ -115,26 +159,17 @@ app.post('/login', (req, res) => {
       res
         .status(403)
         .send("<h2>Wrong Password, try again!\n</h2><a href='/login'> return </a>");
+      return;
     }
   }
 
   req.session['user_id'] = user.id;
-  res.redirect("urls");
+  res.redirect("/urls");
 });
 
 //removes cookies by logout and redirect to main page
 app.post('/logout', (req, res) => {
-  
-  req.session = null;
-  res.redirect("urls");
-});
-
-// removes info from DB for the DELETE button and redirects to the main page
-app.post("/urls/:shortURL/delete", (req, res) => {
-  if (req.session['user_id']) {
-    delete urlDatabase[req.params.shortURL];
-    res.redirect("/urls");
-  }
+  req.session['user_id'] = null;
   res.redirect("/urls");
 });
 
@@ -142,12 +177,15 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post('/register', (req, res) => {
   if (!req.body.email || !req.body.password) {
     res.status(400).send("<h2>'Booo...We need an email address AND a password\n'</h2><a href='/register'> return </a>");
+    return;
   }
   if (findUserByEmail(req.body.email, users)) {
     res
       .status(400)
       .send("<h2>'Ops, you already have an account with this email, please sign in\n'</h2><a href='/login'> Sign in </a>");
+    return;
   }
+
   
   let id = generateRandomStrings();
   users[id] = {
