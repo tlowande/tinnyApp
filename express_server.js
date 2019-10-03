@@ -1,7 +1,7 @@
 
 //SET UP 👇
 const express = require("express");
-let cookieParser = require('cookie-parser');
+let cookieSession = require('cookie-session');
 const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
@@ -10,8 +10,8 @@ const bcrypt = require('bcrypt'); // to hash passwords
 app.set("view engine", "ejs");
 // This converts the info that is being submitted by the form into human readable strings 👇
 app.use(bodyParser.urlencoded({ extended: true }));
-//This parse Cookie header and populate req.cookies with an object keyed by the cookie names.👇
-app.use(cookieParser());
+//This parse cookie header and populate req.cookie with an object keyed by the cookie names.👇
+app.use(cookieSession({ signed: false }));
 //____________________________
 
 const urlDatabase = {
@@ -69,12 +69,12 @@ let urlsForUser = (id) => {
 // console.log(urlsForUser ('aj481w1'));
 
 //________________________
-//ROUTE REQUESTS:
+//ROUTE GET REQUESTS:
 
 app.get("/urls", (req, res) => {
   let templateVars = {
-    urls: urlsForUser(req.cookies['user_id']),
-    user: users[req.cookies['user_id']]
+    urls: urlsForUser(req.session['user_id']),
+    user: users[req.session['user_id']]
   };
   res.render("urls_index", templateVars);
 });
@@ -82,18 +82,18 @@ app.get("/urls", (req, res) => {
 // this route should redirect user to the form and needs to come before the next get => always more specific to more general👇
 app.get("/urls/new", (req, res) => {
   let templateVars = {
-    user: users[req.cookies['user_id']]
+    user: users[req.session['user_id']]
   };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  if (req.cookies['user_id']){
-    let dbPerUser = urlsForUser(req.cookies['user_id']);
+  if (req.session['user_id']){
+    let dbPerUser = urlsForUser(req.session['user_id']);
     let templateVars = {
     shortURL: req.params.shortURL,
     longURL: dbPerUser[req.params.shortURL],
-    user: users[req.cookies['user_id']]
+    user: users[req.session['user_id']]
     }
     res.render("urls_show", templateVars);
     return
@@ -109,27 +109,38 @@ app.get('/register', (req, res) => {
   res.render("urls_registration")
 })
 
+//👇THIS REDIRECTS THE USER TO THE WEBSITE REQUESTED BY CLICKING ON THE SHORT LINK
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL].longURL;
+  res.redirect(longURL);
+});
+
+
+
 // POST ROUTES
 //route that posts(sends) the form body, log the body and its random key to the urlDataBase (locally here for this example) and redirect the page by calling the app.get("/urls/:shortURL"...👇
 app.post("/urls", (req, res) => {
   const key = generateRandomStrings();
   if (req.body.longURL.includes('http://')) {
-    urlDatabase[key] = { longURL: req.body.longURL, userID: req.cookies['user_id'] }
+    urlDatabase[key] = { longURL: req.body.longURL, userID: req.session['user_id'] }
   } else {
-    urlDatabase[key] = { longURL: 'http://' + req.body.longURL, userID: req.cookies['user_id']}
+    urlDatabase[key] = { longURL: 'http://' + req.body.longURL, userID: req.session['user_id']}
   }
   res.redirect("/urls/" + key);
 });
 
 //route that updates short url using form and redirects to show page
 app.post("/urls/:id", (req, res) => {
-  const key = req.params.id;
-  if (req.body.longURL.includes('http://')) {
-    urlDatabase[key].longURL = req.body.longURL;
-  } else {
-    urlDatabase[key].longURL = 'http://' + req.body.longURL;
+  if (req.session['user_id']){
+    const key = req.params.id;
+    if (req.body.longURL.includes('http://')) {
+       urlDatabase[key].longURL = req.body.longURL;
+    } else {
+      urlDatabase[key].longURL = 'http://' + req.body.longURL;
+    }
+    res.redirect("/urls/" + key); 
   }
-  res.redirect("/urls/" + key);
+  res.redirect("/urls");
 });
 
 // logs in and redirects to main page
@@ -139,14 +150,12 @@ app.post('/login', (req, res) => {
 
   if (!req.body.email || !req.body.password) {
     res.status(400).send("<h2>'Booo...We need an email address AND a password\n'</h2><a href='/login'> return </a>");
-    return
   };
 
   if (!user) {
     res
       .status(403)
       .send("<h2>'Ops, you don't have an account with this email, please register\n'</h2><a href='/register'> register </a>");
-      return
   };
 
   if (user) {
@@ -154,28 +163,25 @@ app.post('/login', (req, res) => {
       res
       .status(403)
       .send("<h2>Wrong Password, try again!\n</h2><a href='/login'> return </a>");
-      return
     }
   } 
 
-  res
-   . cookie('user_id', user.id)
-   . redirect("urls");      
+  req.session['user_id'] = user.id;
+  res.redirect("urls");      
 });
 
 //removes cookies by logout and redirect to main page
 app.post('/logout', (req, res) => {
-  res
-    .clearCookie('user_id')
-    .redirect("urls");
+  
+  req.session = null;
+  res.redirect("urls");
 });
 
 // removes info from DB for the DELETE button and redirects to the main page
 app.post("/urls/:shortURL/delete", (req, res) => {
-  if (req.cookies['user_id']){
+  if (req.session['user_id']){
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls");
-  return
   }
   res.redirect("/urls");
 });
@@ -200,17 +206,11 @@ app.post('/register', (req, res) => {
     password: bcrypt.hashSync(req.body.password, 10)
   };
   
-  res
-    .cookie('user_id', id)
-    .redirect('/urls')
-  console.log(users)
+  
+  req.session['user_id'] = id
+  res.redirect('/urls')
 })
 
-//👇THIS REDIRECTS THE USER TO THE WEBSITE REQUESTED BY CLICKING ON THE SHORT LINK
-app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL].longURL;
-  res.redirect(longURL);
-});
 
 
 //THIS MAKES THE SERVER LISTEN TO THE REQUESTS THAT CMOMES FROM THE BROWSER
