@@ -186,15 +186,13 @@ app.post('/register', (req, res) => {
     return;
   }
 
-  
   let id = generateRandomStrings();
   users[id] = {
     id: id,
     email: req.body.email,
     password: bcrypt.hashSync(req.body.password, 10)
   };
-  
-  
+
   req.session['user_id'] = id;
   res.redirect('/urls');
 });
