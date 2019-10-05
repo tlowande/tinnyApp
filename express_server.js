@@ -34,18 +34,19 @@ app.get('/', (req, res) => {
 
 //logged in homepage
 app.get("/urls", (req, res) => {
-
   let templateVars = {
     urls: urlsForUser(req.session['user_id']),
     user: users[req.session['user_id']]
   };
   res.render("urls_index", templateVars);
+
 });
 
 // redirect user to make a new shortlink and needs to come before the next get => always more specific to more general👇
 app.get("/urls/new", (req, res) => {
   if (!req.session['user_id']) {
     res.redirect('/login');
+    return
   }
   let templateVars = {
     user: users[req.session['user_id']]
@@ -75,6 +76,7 @@ app.get('/login', (req, res) => {
     return;
   }
   res.render("urls_signin");
+  return
 });
 
 //redirects to register page
@@ -141,16 +143,10 @@ app.post("/urls/:id", (req, res) => {
 app.post('/login', (req, res) => {
 
   let user = findUserByEmail(req.body.email, users);
-
-  if (!req.body.email || !req.body.password) {
-    res.status(400).send("<h2>'Booo...We need an email address AND a password\n'</h2><a href='/login'> return </a>");
-    return;
-  }
-
   if (!user) {
     res
       .status(403)
-      .send("<h2>'Ops, you don't have an account with this email, please register\n'</h2><a href='/register'> register </a>");
+      .send("<h2>Ops, you don't have an account with this email, please register\n</h2><a href='/register'> register </a>");
     return;
   }
 
@@ -175,14 +171,11 @@ app.post('/logout', (req, res) => {
 
 //this route checks if user already exists and if it doesn't, it creates an ID and add to the DB
 app.post('/register', (req, res) => {
-  if (!req.body.email || !req.body.password) {
-    res.status(400).send("<h2>'Booo...We need an email address AND a password\n'</h2><a href='/register'> return </a>");
-    return;
-  }
+
   if (findUserByEmail(req.body.email, users)) {
     res
       .status(400)
-      .send("<h2>'Ops, you already have an account with this email, please sign in\n'</h2><a href='/login'> Sign in </a>");
+      .send("<h2>Ops, you already have an account with this email, please sign in\n</h2><a href='/login'> Sign in </a>");
     return;
   }
 
