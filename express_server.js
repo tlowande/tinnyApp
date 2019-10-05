@@ -39,7 +39,7 @@ app.get("/urls", (req, res) => {
     user: users[req.session['user_id']]
   };
   res.render("urls_index", templateVars);
-
+  console.log(templateVars.urls)
 });
 
 // redirect user to make a new shortlink and needs to come before the next get => always more specific to more general👇
@@ -61,6 +61,7 @@ app.get("/urls/:shortURL", (req, res) => {
     let templateVars = {
       shortURL: req.params.shortURL,
       longURL: dbPerUser[req.params.shortURL],
+      date: dbPerUser.date,
       user: users[req.session['user_id']]
     };
     res.render("urls_show", templateVars);
@@ -108,9 +109,9 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/urls", (req, res) => {
   const key = generateRandomStrings();
   if (req.body.longURL.includes('http://')) {
-    urlDatabase[key] = { longURL: req.body.longURL, userID: req.session['user_id'] };
+    urlDatabase[key] = { longURL: req.body.longURL, userID: req.session['user_id'], date: Date() };
   } else {
-    urlDatabase[key] = { longURL: 'http://' + req.body.longURL, userID: req.session['user_id']};
+    urlDatabase[key] = { longURL: 'http://' + req.body.longURL, userID: req.session['user_id'], date: Date()};
   }
   res.redirect("/urls/" + key);
 });
@@ -169,7 +170,7 @@ app.post('/login', (req, res) => {
 
 //removes cookies by logout and redirect to main page
 app.post('/logout', (req, res) => {
-  req.session['user_id'] = null;
+  req.session = null;
   res.redirect("/urls");
 });
 
@@ -178,7 +179,7 @@ app.post('/register', (req, res) => {
 
   if (findUserByEmail(req.body.email, users)) {
     let m = {
-      msg:"Ops, you already have an account with this email, please <a href='/login'> sign n </a>"
+      msg:"Ops, you already have an account with this email, please <a href='/login'> sign in </a>"
     };
     res
       .status(400)

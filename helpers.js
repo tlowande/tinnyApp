@@ -3,11 +3,13 @@
 const urlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
-    userID: 'aj481w'
+    userID: 'aj481w',
+    date: 'x'
   },
   "9sm5xK": {
     longURL: "http://www.google.com",
-    userID: 'aj481w1'
+    userID: 'aj481w1',
+    date: 'x'
   }
 };
 
@@ -43,6 +45,7 @@ let urlsForUser = (id) => {
   for (let url in urlDatabase) {
     if (urlDatabase[url].userID === id) {
       urlById[url] = urlDatabase[url].longURL;
+      urlById.date = urlDatabase[url].date
     }
   }
   return urlById;
