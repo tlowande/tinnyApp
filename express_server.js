@@ -46,7 +46,7 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   if (!req.session['user_id']) {
     res.redirect('/login');
-    return
+    return;
   }
   let templateVars = {
     user: users[req.session['user_id']]
@@ -76,7 +76,7 @@ app.get('/login', (req, res) => {
     return;
   }
   res.render("urls_signin");
-  return
+  return;
 });
 
 //redirects to register page
@@ -143,18 +143,21 @@ app.post("/urls/:id", (req, res) => {
 app.post('/login', (req, res) => {
 
   let user = findUserByEmail(req.body.email, users);
+  let m = { msg: "Ops, you don't have an account with this email, please <a href='/register'>register</a>"
+  };
   if (!user) {
     res
       .status(403)
-      .send("<h2>Ops, you don't have an account with this email, please register\n</h2><a href='/register'> register </a>");
+      .render('error', m);
     return;
   }
 
   if (user) {
     if (!bcrypt.compareSync(req.body.password, user.password)) {
+      let m = { msg: "Wrong Password, <a href='/login'>try again!</a>"};
       res
         .status(403)
-        .send("<h2>Wrong Password, try again!\n</h2><a href='/login'> return </a>");
+        .render('error', m);
       return;
     }
   }
@@ -173,9 +176,12 @@ app.post('/logout', (req, res) => {
 app.post('/register', (req, res) => {
 
   if (findUserByEmail(req.body.email, users)) {
+    let m = {
+      msg:"Ops, you already have an account with this email, please <a href='/login'> sign n </a>"
+    };
     res
       .status(400)
-      .send("<h2>Ops, you already have an account with this email, please sign in\n</h2><a href='/login'> Sign in </a>");
+      .render('error', m);
     return;
   }
 
