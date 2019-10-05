@@ -91,7 +91,8 @@ app.get('/register', (req, res) => {
 //👇THIS REDIRECTS THE USER TO THE WEBSITE REQUESTED BY CLICKING ON THE SHORT LINK
 app.get("/u/:shortURL", (req, res) => {
   if (!urlDatabase[req.params.shortURL]) {
-    res.send('Something is missing, please get the right url');
+    const m = { msg: 'Something is missing, please get the right url' }
+    res.render("error", m);
     return;
   } else {
     const longURL = urlDatabase[req.params.shortURL].longURL;
@@ -198,7 +199,10 @@ app.post('/register', (req, res) => {
   res.redirect('/urls');
 });
 
-
+app.get("/*", (req, res) => {
+  const m = { msg: 'Something is still missing, please get the right url' }
+  res.render("error", m);
+})
 
 //THIS MAKES THE SERVER LISTEN TO THE REQUESTS THAT CMOMES FROM THE BROWSER
 app.listen(PORT, () => {
