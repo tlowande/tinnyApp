@@ -1,11 +1,11 @@
 //VARIABLES - DATABASE 
 
 const urlDatabase = {
-  "b2xVn2": {
-    longURL: "http://www.lighthouselabs.ca",
-    userID: 'aj481w',
-    date: 'x'
-  },
+  // "b2xVn2": {
+  //   longURL: "http://www.lighthouselabs.ca",
+  //   userID: 'aj481w',
+  //   date: 'x'
+  // },
   "9sm5xK": {
     longURL: "http://www.google.com",
     userID: 'aj481w1',
@@ -13,8 +13,10 @@ const urlDatabase = {
   }
 };
 
-const users = {};
+for(let url in urlDatabase){
+}
 
+const users = {};
 
 //____________________________
 //FUNCTIONS
@@ -44,8 +46,10 @@ let urlsForUser = (id) => {
   let urlById = {};
   for (let url in urlDatabase) {
     if (urlDatabase[url].userID === id) {
-      urlById[url] = urlDatabase[url].longURL;
-      urlById.date = urlDatabase[url].date
+      urlById[url] = {
+        long: urlDatabase[url].longURL,
+        date: urlDatabase[url].date 
+      }
     }
   }
   return urlById;

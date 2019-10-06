@@ -60,10 +60,11 @@ app.get("/urls/:shortURL", (req, res) => {
     let dbPerUser = urlsForUser(req.session['user_id']);
     let templateVars = {
       shortURL: req.params.shortURL,
-      longURL: dbPerUser[req.params.shortURL],
-      date: dbPerUser.date,
+      longURL: dbPerUser[req.params.shortURL].long,
+      date: dbPerUser[req.params.shortURL].date,
       user: users[req.session['user_id']]
     };
+    console.log(templateVars)
     res.render("urls_show", templateVars);
     return;
   }
@@ -132,8 +133,10 @@ app.post("/urls/:id", (req, res) => {
     const key = req.params.id;
     if (req.body.longURL.includes('http://')) {
       urlDatabase[key].longURL = req.body.longURL;
+      urlDatabase[key].date = Date();
     } else {
       urlDatabase[key].longURL = 'http://' + req.body.longURL;
+      urlDatabase[key].date = Date();
     }
     res.redirect("/urls");
     return;

@@ -29,9 +29,9 @@
       <tbody>
         <% for(let url in urls) { %>
           <tr>
-            <td><%urls[url].date%></td>
+            <td><%=urls[url].date%></td>
             <td><a href = "/u/<%= url%>" target="_blank"><%= url %></a></td>
-            <td><%= urls[url] %></td>
+            <td><%= urls[url].long %></td>
             <td><form class="form-inline" action="/urls/<%= url %>" method="GET">
                 <button type="submit" class="btn btn-primary" style= "background-color: white; border-color: blue; color: blue" >Edit</button>
             </form></td>
