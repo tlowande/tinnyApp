@@ -1,20 +1,6 @@
-//VARIABLES - DATABASE 
+//VARIABLES - DATABASE
 
-const urlDatabase = {
-  // "b2xVn2": {
-  //   longURL: "http://www.lighthouselabs.ca",
-  //   userID: 'aj481w',
-  //   date: 'x'
-  // },
-  "9sm5xK": {
-    longURL: "http://www.google.com",
-    userID: 'aj481w1',
-    date: 'x'
-  }
-};
-
-for(let url in urlDatabase){
-}
+const urlDatabase = {};
 
 const users = {};
 
@@ -48,8 +34,8 @@ let urlsForUser = (id) => {
     if (urlDatabase[url].userID === id) {
       urlById[url] = {
         long: urlDatabase[url].longURL,
-        date: urlDatabase[url].date 
-      }
+        date: urlDatabase[url].date
+      };
     }
   }
   return urlById;
@@ -62,4 +48,4 @@ module.exports = {
   users,
   urlDatabase
 
-}
+};

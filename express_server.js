@@ -39,7 +39,6 @@ app.get("/urls", (req, res) => {
     user: users[req.session['user_id']]
   };
   res.render("urls_index", templateVars);
-  console.log(templateVars.urls)
 });
 
 // redirect user to make a new shortlink and needs to come before the next get => always more specific to more general👇
@@ -56,7 +55,7 @@ app.get("/urls/new", (req, res) => {
 
 //presents the shor urls and the edit option
 app.get("/urls/:shortURL", (req, res) => {
-  if (req.session['user_id']) {
+  if (req.session["user_id"] && urlDatabase[req.params.shortURL].userID === req.session["user_id"]) {
     let dbPerUser = urlsForUser(req.session['user_id']);
     let templateVars = {
       shortURL: req.params.shortURL,
@@ -64,7 +63,6 @@ app.get("/urls/:shortURL", (req, res) => {
       date: dbPerUser[req.params.shortURL].date,
       user: users[req.session['user_id']]
     };
-    console.log(templateVars)
     res.render("urls_show", templateVars);
     return;
   }
@@ -93,7 +91,7 @@ app.get('/register', (req, res) => {
 //👇THIS REDIRECTS THE USER TO THE WEBSITE REQUESTED BY CLICKING ON THE SHORT LINK
 app.get("/u/:shortURL", (req, res) => {
   if (!urlDatabase[req.params.shortURL]) {
-    const m = { msg: 'Something is missing, please get the right url' }
+    const m = { msg: 'Something is missing, please get the right url' };
     res.render("error", m);
     return;
   } else {
@@ -202,9 +200,9 @@ app.post('/register', (req, res) => {
 });
 
 app.get("/*", (req, res) => {
-  const m = { msg: 'Something is still missing, please get the right url' }
+  const m = { msg: 'Something is still missing, please get the right url' };
   res.render("error", m);
-})
+});
 
 //THIS MAKES THE SERVER LISTEN TO THE REQUESTS THAT CMOMES FROM THE BROWSER
 app.listen(PORT, () => {
